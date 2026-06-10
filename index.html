@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0277BD" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Sparkle" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Sparkle Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #E1F5FE; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    #app { max-width: 420px; margin: 0 auto; min-height: 100%; background: #fff; display: flex; flex-direction: column; }
+
+    /* HEADER */
+    .header { background: #0277BD; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .header-badge { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+    /* NAV */
+    .nav { display: flex; border-bottom: 1px solid #E3F2FD; background: #fff; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px; gap: 2px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: #78909C; font-size: 20px; }
+    .nav-btn.active { color: #0277BD; border-bottom-color: #0277BD; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+
+    /* BODY */
+    .body { flex: 1; overflow-y: auto; padding-bottom: 20px; -webkit-overflow-scrolling: touch; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* CARDS */
+    .hero-card { background: linear-gradient(135deg, #0277BD, #0288D1); color: #fff; margin: 20px 16px 0; border-radius: 16px; padding: 24px 20px; text-align: center; }
+    .hero-label { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+    .hero-amount { font-size: 36px; font-weight: 800; margin: 6px 0 4px; letter-spacing: -1px; }
+    .hero-sub { font-size: 13px; opacity: 0.75; }
+
+    .row2 { display: flex; gap: 12px; margin: 12px 16px 0; }
+    .mini-card { flex: 1; background: #F8FAFB; border-radius: 12px; padding: 14px 16px; }
+    .mini-label { font-size: 11px; color: #90A4AE; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mini-val { font-size: 18px; font-weight: 700; color: #263238; margin-top: 4px; }
+
+    .section { margin: 20px 16px 0; }
+    .section-title { font-size: 13px; font-weight: 700; color: #546E7A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+    /* BAR CHART */
+    .bar-chart { display: flex; gap: 6px; align-items: flex-end; height: 90px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .bar-wrap { width: 100%; height: 60px; display: flex; align-items: flex-end; }
+    .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 2px; background: #B3E5FC; transition: height 0.3s; }
+    .bar.today { background: #0288D1; }
+    .bar-label { font-size: 10px; color: #78909C; }
+    .bar-label.today { font-weight: 700; }
+    .bar-val { font-size: 9px; color: #0277BD; font-weight: 700; }
+
+    /* CATEGORY ROWS */
+    .cat-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #F5F5F5; }
+    .cat-emoji { font-size: 20px; width: 28px; text-align: center; }
+    .cat-name { flex: 1; font-size: 14px; color: #37474F; }
+    .cat-amt { font-size: 14px; font-weight: 700; color: #0277BD; }
+
+    /* FORM */
+    label.lbl { display: block; font-size: 12px; font-weight: 700; color: #546E7A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 20px; }
+    input[type=number], input[type=text] { width: 100%; padding: 12px 14px; border: 1px solid #CFD8DC; border-radius: 10px; font-size: 16px; color: #263238; outline: none; -webkit-appearance: none; }
+    input:focus { border-color: #0288D1; }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 8px 12px; border-radius: 20px; border: 1px solid #CFD8DC; background: #F8FAFB; font-size: 13px; cursor: pointer; color: #546E7A; }
+    .chip.active { background: #E1F5FE; border-color: #0288D1; color: #0277BD; font-weight: 700; }
+    .pay-row { display: flex; gap: 12px; }
+    .pay-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; background: #F8FAFB; font-size: 15px; cursor: pointer; color: #546E7A; font-weight: 500; }
+    .pay-btn.momo-active { background: #FFD600; color: #111; font-weight: 700; border-color: #FFD600; }
+    .pay-btn.cash-active { background: #4CAF50; color: #fff; font-weight: 700; border-color: #4CAF50; }
+    .save-btn { margin-top: 24px; width: 100%; padding: 15px; background: #0277BD; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .save-btn:active { background: #01579B; }
+
+    /* LOG */
+    .entry-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid #F5F5F5; }
+    .entry-emoji { font-size: 22px; width: 30px; text-align: center; }
+    .entry-mid { flex: 1; }
+    .entry-name { font-size: 14px; font-weight: 600; color: #37474F; }
+    .entry-sub { font-size: 12px; color: #90A4AE; margin-top: 2px; }
+    .entry-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .entry-amt { font-size: 15px; font-weight: 700; color: #0277BD; }
+    .del-btn { background: none; border: none; color: #EF9A9A; font-size: 16px; cursor: pointer; padding: 2px 6px; }
+    .pay-tag { border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; color: #111; }
+
+    /* PROGRESS */
+    .prog-track { height: 4px; background: #E3F2FD; border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+    .prog-bar { height: 100%; background: #0288D1; border-radius: 4px; }
+
+    /* INSIGHT */
+    .insight-box { margin: 20px 16px; background: #FFF8E1; border-radius: 12px; padding: 16px; border: 1px solid #FFE082; }
+    .insight-title { font-size: 13px; font-weight: 700; color: #F57F17; margin-bottom: 6px; }
+    .insight-text { font-size: 14px; color: #5D4037; line-height: 1.5; }
+
+    /* EMPTY */
+    .empty { color: #90A4AE; font-size: 14px; text-align: center; padding: 30px 0; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #263238; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title">💧 Sparkle Tracker</div>
+      <div class="header-sub" id="day-label">7-Day Expense Challenge</div>
+    </div>
+    <div class="header-badge" id="today-total">GHS 0.00 today</div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" data-screen="home" onclick="showScreen('home',this)">
+      🏠<span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" data-screen="add" onclick="showScreen('add',this)">
+      ➕<span class="nav-label">Add</span>
+    </button>
+    <button class="nav-btn" data-screen="log" onclick="showScreen('log',this)">
+      📋<span class="nav-label">Log</span>
+    </button>
+    <button class="nav-btn" data-screen="summary" onclick="showScreen('summary',this)">
+      📊<span class="nav-label">Summary</span>
+    </button>
+  </div>
+
+  <div class="body">
+
+    <!-- HOME -->
+    <div id="screen-home" class="screen active">
+      <div class="hero-card">
+        <div class="hero-label">7-Day Total</div>
+        <div class="hero-amount" id="home-total">GHS 0.00</div>
+        <div class="hero-sub" id="home-count">0 expenses logged</div>
+      </div>
+      <div class="row2">
+        <div class="mini-card" style="border-top:3px solid #FFD600">
+          <div class="mini-label">MoMo</div>
+          <div class="mini-val" id="home-momo">GHS 0.00</div>
+        </div>
+        <div class="mini-card" style="border-top:3px solid #4CAF50">
+          <div class="mini-label">Cash</div>
+          <div class="mini-val" id="home-cash">GHS 0.00</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Spending by Day</div>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+      <div class="section" id="top-cats-section">
+        <div class="section-title">Top Spending Areas</div>
+        <div id="top-cats"></div>
+      </div>
+      <div class="empty" id="home-empty" style="display:none">No expenses yet. Tap <strong>Add</strong> to log your first one.</div>
+    </div>
+
+    <!-- ADD -->
+    <div id="screen-add" class="screen">
+      <div class="section">
+        <div class="section-title">Log an Expense</div>
+        <label class="lbl">Amount (GHS)</label>
+        <input type="number" id="inp-amount" placeholder="0.00" inputmode="decimal" step="0.01" min="0" />
+        <label class="lbl">Category</label>
+        <div class="chip-grid" id="cat-chips"></div>
+        <label class="lbl">Payment Method</label>
+        <div class="pay-row">
+          <button class="pay-btn momo-active" id="btn-momo" onclick="selectPay('momo')">📲 MoMo</button>
+          <button class="pay-btn" id="btn-cash" onclick="selectPay('cash')">💵 Cash</button>
+        </div>
+        <label class="lbl">Note (optional)</label>
+        <input type="text" id="inp-note" placeholder="e.g. Kelewele from junction" />
+        <button class="save-btn" onclick="saveEntry()">Save Expense</button>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div id="screen-log" class="screen">
+      <div class="section">
+        <div class="section-title" id="log-title">All Entries (0)</div>
+        <div id="log-list"><div class="empty">Nothing logged yet.</div></div>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div id="screen-summary" class="screen">
+      <div class="hero-card">
+        <div class="hero-label">Total Spent — 7 Days</div>
+        <div class="hero-amount" id="sum-total">GHS 0.00</div>
+      </div>
+      <div class="section">
+        <div class="section-title">By Payment Method</div>
+        <div class="cat-row"><span class="cat-emoji">📲</span><span class="cat-name">MoMo</span><span class="cat-amt" id="sum-momo">GHS 0.00</span></div>
+        <div class="cat-row"><span class="cat-emoji">💵</span><span class="cat-name">Cash</span><span class="cat-amt" id="sum-cash">GHS 0.00</span></div>
+      </div>
+      <div class="section">
+        <div class="section-title">By Category</div>
+        <div id="sum-cats"><div class="empty">No data yet.</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Daily Breakdown</div>
+        <div id="sum-days"></div>
+      </div>
+      <div id="insight-box" class="insight-box" style="display:none">
+        <div class="insight-title">📌 Quick Insight</div>
+        <div class="insight-text" id="insight-text"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = [
+  { id:"food",      label:"Food & Drinks",    emoji:"🍽️" },
+  { id:"transport", label:"Transport",         emoji:"🚌" },
+  { id:"business",  label:"Sparkle Business",  emoji:"🍹" },
+  { id:"airtime",   label:"Airtime & Data",    emoji:"📱" },
+  { id:"household", label:"Household",         emoji:"🏠" },
+  { id:"personal",  label:"Personal Care",     emoji:"🪥" },
+  { id:"ministry",  label:"Ministry / Giving", emoji:"✝️" },
+  { id:"other",     label:"Other",             emoji:"📦" },
+];
+const DAY_LABELS = ["Day 1","Day 2","Day 3","Day 4","Day 5","Day 6","Day 7"];
+
+let entries = [];
+let startDate = "";
+let selectedCat = "food";
+let selectedPay = "momo";
+
+function fmt(n){ return "GHS " + Number(n).toFixed(2); }
+function getToday(){ return new Date().toISOString().split("T")[0]; }
+function getDayIndex(start){
+  if(!start) return 0;
+  const diff = Math.floor((Date.now() - new Date(start).getTime()) / 86400000);
+  return Math.min(Math.max(diff,0),6);
+}
+
+function load(){
+  try { entries = JSON.parse(localStorage.getItem("bebe_entries")||"[]"); } catch{ entries=[]; }
+  startDate = localStorage.getItem("bebe_start")||"";
+  if(!startDate){
+    startDate = getToday();
+    localStorage.setItem("bebe_start", startDate);
+  }
+}
+function save(){ localStorage.setItem("bebe_entries", JSON.stringify(entries)); }
+
+function showScreen(id, btn){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+  btn.classList.add("active");
+  render();
+}
+
+function selectCat(id){
+  selectedCat = id;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active", c.dataset.cat===id));
+}
+function selectPay(id){
+  selectedPay = id;
+  document.getElementById("btn-momo").className = "pay-btn" + (id==="momo"?" momo-active":"");
+  document.getElementById("btn-cash").className = "pay-btn" + (id==="cash"?" cash-active":"");
+}
+
+function saveEntry(){
+  const amtEl = document.getElementById("inp-amount");
+  const amt = parseFloat(amtEl.value);
+  if(!amt || isNaN(amt) || amt <= 0){ showToast("Enter a valid amount"); return; }
+  const entry = {
+    id: Date.now(),
+    amount: amt,
+    category: selectedCat,
+    payment: selectedPay,
+    note: document.getElementById("inp-note").value.trim(),
+    date: getToday(),
+    day: getDayIndex(startDate),
+  };
+  entries.unshift(entry);
+  save();
+  amtEl.value="";
+  document.getElementById("inp-note").value="";
+  showToast("✅ Saved!");
+  render();
+}
+
+function deleteEntry(id){
+  entries = entries.filter(e=>e.id!==id);
+  save();
+  render();
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+function render(){
+  const today = getToday();
+  const dayIndex = getDayIndex(startDate);
+  const total = entries.reduce((s,e)=>s+e.amount,0);
+  const todayTotal = entries.filter(e=>e.date===today).reduce((s,e)=>s+e.amount,0);
+  const momoTotal = entries.filter(e=>e.payment==="momo").reduce((s,e)=>s+e.amount,0);
+  const cashTotal = entries.filter(e=>e.payment==="cash").reduce((s,e)=>s+e.amount,0);
+
+  // Header
+  document.getElementById("day-label").textContent = "7-Day Challenge · " + DAY_LABELS[dayIndex];
+  document.getElementById("today-total").textContent = fmt(todayTotal)+" today";
+
+  // HOME
+  document.getElementById("home-total").textContent = fmt(total);
+  document.getElementById("home-count").textContent = entries.length+" expense"+(entries.length!==1?"s":"")+" logged";
+  document.getElementById("home-momo").textContent = fmt(momoTotal);
+  document.getElementById("home-cash").textContent = fmt(cashTotal);
+  document.getElementById("home-empty").style.display = entries.length===0?"block":"none";
+  document.getElementById("top-cats-section").style.display = entries.length===0?"none":"block";
+
+  // Bar chart
+  const byDay = Array.from({length:7},(_,i)=>({
+    label:DAY_LABELS[i],
+    total:entries.filter(e=>e.day===i).reduce((s,e)=>s+e.amount,0),
+  }));
+  const maxDay = Math.max(...byDay.map(d=>d.total),1);
+  const chart = document.getElementById("bar-chart");
+  chart.innerHTML = byDay.map((d,i)=>`
+    <div class="bar-col">
+      <div class="bar-wrap">
+        <div class="bar${i===dayIndex?" today":""}" style="height:${(d.total/maxDay)*100}%"></div>
+      </div>
+      <div class="bar-label${i===dayIndex?" today":""}">${"D"+(i+1)}</div>
+      ${d.total>0?`<div class="bar-val">${d.total.toFixed(0)}</div>`:""}
+    </div>`).join("");
+
+  // Top categories
+  const byCat = CATEGORIES.map(c=>({
+    ...c, total:entries.filter(e=>e.category===c.id).reduce((s,e)=>s+e.amount,0)
+  })).filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  document.getElementById("top-cats").innerHTML = byCat.slice(0,4).map(c=>`
+    <div class="cat-row">
+      <span class="cat-emoji">${c.emoji}</span>
+      <span class="cat-name">${c.label}</span>
+      <span class="cat-amt">${fmt(c.total)}</span>
+    </div>`).join("");
+
+  // LOG
+  document.getElementById("log-title").textContent = "All Entries ("+entries.length+")";
+  document.getElementById("log-list").innerHTML = entries.length===0
+    ? '<div class="empty">Nothing logged yet.</div>'
+    : entries.map(e=>{
+        const cat = CATEGORIES.find(c=>c.id===e.category)||{emoji:"📦",label:"Other"};
+        const payColor = e.payment==="momo"?"#FFD600":"#4CAF50";
+        return `<div class="entry-row">
+          <span class="entry-emoji">${cat.emoji}</span>
+          <div class="entry-mid">
+            <div class="entry-name">${cat.label}</div>
+            <div class="entry-sub">
+              <span class="pay-tag" style="background:${payColor}">${e.payment==="momo"?"MoMo":"Cash"}</span>
+              ${e.note?" · "+e.note:""} · ${DAY_LABELS[e.day]}
+            </div>
+          </div>
+          <div class="entry-right">
+            <div class="entry-amt">${fmt(e.amount)}</div>
+            <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+          </div>
+        </div>`;
+      }).join("");
+
+  // SUMMARY
+  document.getElementById("sum-total").textContent = fmt(total);
+  document.getElementById("sum-momo").textContent = fmt(momoTotal);
+  document.getElementById("sum-cash").textContent = fmt(cashTotal);
+  document.getElementById("sum-cats").innerHTML = byCat.length===0
+    ? '<div class="empty">No data yet.</div>'
+    : byCat.map(c=>{
+        const pct = total>0?(c.total/total)*100:0;
+        return `<div class="cat-row">
+          <span class="cat-emoji">${c.emoji}</span>
+          <span class="cat-name">${c.label}</span>
+          <span class="cat-amt">${fmt(c.total)}</span>
+        </div>
+        <div class="prog-track"><div class="prog-bar" style="width:${pct}%"></div></div>`;
+      }).join("");
+  document.getElementById("sum-days").innerHTML = byDay.map((d,i)=>`
+    <div class="cat-row">
+      <span class="cat-emoji">${i===dayIndex?"📍":"📅"}</span>
+      <span class="cat-name">${d.label}${i===dayIndex?" (today)":""}</span>
+      <span class="cat-amt">${fmt(d.total)}</span>
+    </div>`).join("");
+
+  if(byCat.length>0){
+    const top = byCat[0];
+    const msg = top.id==="food"
+      ? "Food costs add up fast — look for patterns in timing and location."
+      : top.id==="transport"
+      ? "Transport is eating a chunk — consider grouping trips."
+      : "Keep watching this category across the 7 days.";
+    document.getElementById("insight-text").innerHTML = `Your biggest spending area is <strong>${top.label}</strong> at <strong>${fmt(top.total)}</strong>. ${msg}`;
+    document.getElementById("insight-box").style.display="block";
+  } else {
+    document.getElementById("insight-box").style.display="none";
+  }
+}
+
+// Build category chips
+function buildChips(){
+  document.getElementById("cat-chips").innerHTML = CATEGORIES.map(c=>`
+    <button class="chip${c.id===selectedCat?" active":""}" data-cat="${c.id}" onclick="selectCat('${c.id}')">${c.emoji} ${c.label}</button>
+  `).join("");
+}
+
+// Init
+load();
+buildChips();
+render();
+
+// Service Worker
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
